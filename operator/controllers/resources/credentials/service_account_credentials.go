@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/seldonio/seldon-core/operator/controllers/resources/credentials/gcs"
+	"github.com/seldonio/seldon-core/operator/controllers/resources/credentials/ormb"
 	"github.com/seldonio/seldon-core/operator/controllers/resources/credentials/s3"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,8 +34,9 @@ const (
 )
 
 type CredentialConfig struct {
-	S3  s3.S3Config   `json:"s3,omitempty"`
-	GCS gcs.GCSConfig `json:"gcs,omitempty"`
+	S3   s3.S3Config     `json:"s3,omitempty"`
+	GCS  gcs.GCSConfig   `json:"gcs,omitempty"`
+	ORMB ormb.ORMBConfig `json:"ormb,omitempty"`
 }
 
 type CredentialBuilder struct {
@@ -66,6 +68,7 @@ func (c *CredentialBuilder) CreateSecretVolumeAndEnv(namespace string, serviceAc
 
 	s3SecretAccessKeyName := s3.AWSSecretAccessKeyName
 	gcsCredentialFileName := gcs.GCSCredentialFileName
+	ormbUsernameName := ormb.ORMBUsernameName
 
 	if c.config.S3.S3SecretAccessKeyName != "" {
 		s3SecretAccessKeyName = c.config.S3.S3SecretAccessKeyName
@@ -73,6 +76,10 @@ func (c *CredentialBuilder) CreateSecretVolumeAndEnv(namespace string, serviceAc
 
 	if c.config.GCS.GCSCredentialFileName != "" {
 		gcsCredentialFileName = c.config.GCS.GCSCredentialFileName
+	}
+
+	if c.config.ORMB.ORMBUsernameName != "" {
+		ormbUsernameName = c.config.ORMB.ORMBUsernameName
 	}
 
 	serviceAccount, err := c.clientset.CoreV1().ServiceAccounts(namespace).Get(serviceAccountName, metav1.GetOptions{})
@@ -101,6 +108,10 @@ func (c *CredentialBuilder) CreateSecretVolumeAndEnv(namespace string, serviceAc
 					Name:  gcs.GCSCredentialEnvKey,
 					Value: gcs.GCSCredentialVolumeMountPath + gcsCredentialFileName,
 				})
+		} else if _, ok := secret.Data[ormbUsernameName]; ok {
+			log.Info("Setting secret envs for ormb", "ORMBSecret", secret.Name)
+			envs := ormb.BuildSecretEnvs(secret, &c.config.ORMB)
+			container.Env = append(container.Env, envs...)
 		} else {
 			log.V(5).Info("Skipping non gcs/s3 secret", "Secret", secret.Name)
 		}
