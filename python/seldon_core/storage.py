@@ -36,6 +36,7 @@ _GCS_PREFIX = "gs://"
 _S3_PREFIX = "s3://"
 _BLOB_RE = "https://(.+?).blob.core.windows.net/(.+)"
 _LOCAL_PREFIX = "file://"
+_ORMB_PREFIX = "ormb://"
 
 
 class Storage(object):  # pylint: disable=too-few-public-methods
