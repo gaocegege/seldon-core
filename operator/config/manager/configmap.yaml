@@ -66,7 +66,7 @@ data:
     }
   storageInitializer: |-
     {
-        "image" : "cleveross/clever-ormb-storage-initializer:v0.0.1-5-g09f9373",
+        "image" : "cleveross/clever-ormb-storage-initializer:v0.0.1-5-gd5cc8fd-dirty",
         "memoryRequest": "100Mi",
         "memoryLimit": "1Gi",
         "cpuRequest": "100m",
